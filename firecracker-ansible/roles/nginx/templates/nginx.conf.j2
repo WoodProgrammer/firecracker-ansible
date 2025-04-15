@@ -1,0 +1,15 @@
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+events {
+    worker_connections 768;
+}
+http {
+    server {
+        listen 80;
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+        }
+    }
+}
