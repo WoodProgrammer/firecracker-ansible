@@ -1,14 +1,11 @@
-- name: Check Dist Version
-  shell: cat /etc/os-release |grep ID_LIKE|awk -F "=" '{print $2}'
-  register: os_release
-
 - name: Install Docker daemon for debian distribution
+  when: ansible_facts['distribution'] == 'Ubuntu'
   apt:
     name:
     - docker.io
+    - docker-buildx
     state: present
     update_cache: yes
-  when: os_release.rc == "debian"
 
 - name: Download firecracker binary
   ansible.builtin.shell: |
@@ -23,5 +20,22 @@
     fi
     cd /tmp/
       curl -LO https://github.com/WoodProgrammer/firecracker-rootfs-builder/releases/download/v0.0.2/firecracker-rootfs-builder_0.0.2_linux_${CPU_ARCH}.tar.gz
-      tar -xvf firecracker-rootfs-builder_0.0.2_linux_amd64.tar.gz && mv bin/ofs /usr/local/bin
+      tar -xvf firecracker-rootfs-builder_0.0.2_linux_${CPU_ARCH}.tar.gz && mv bin/ofs /usr/local/bin/
+
+      rm -rf bin firecracker-rootfs-builder_0.0.2_linux_${CPU_ARCH}.tar.gz
     cd ..
+
+- name: Upload rootfs OCI config template
+  template:
+    src: config.yaml.j2
+    dest: /tmp/{{config_file_name}}
+
+- name: Build rootfs from OCI image
+  ansible.builtin.shell: |
+    set -e
+    mkdir -p /tmp/{{target_directory}}-builder
+
+    cd /tmp/{{target_directory}}-builder
+      ofs -C /tmp/{{config_file_name}}
+    cd ..
+  register: result

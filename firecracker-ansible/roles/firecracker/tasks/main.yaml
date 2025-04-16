@@ -1,8 +1,5 @@
-- name: Check Dist Version
-  shell: cat /etc/os-release |grep ID_LIKE|awk -F "=" '{print $2}'
-  register: os_release
-
 - name: Install dependencies for debian distribution
+  when: ansible_facts['distribution'] == 'Ubuntu'
   apt:
     name:
     - git
@@ -38,11 +35,13 @@
 
 - name: Download firecracker binary
   ansible.builtin.shell: |
+
     set -e
     CPU_TYPE=$(lscpu |grep "Architecture"| awk -F ":" '{print $2}'|tr -d " ")
 
     cd /tmp/
-    curl -LO https://github.com/firecracker-microvm/firecracker/releases/download/v1.11.0/firecracker-v1.11.0-$CPU_TYPE.tgz
-    tar -xvf firecracker-v1.11.0-$CPU_TYPE.tgz && mv release-v1.11.0-$CPU_TYPE/firecracker-v1.11.0-$CPU_TYPE /usr/local/bin/firecracker
-    rm -rf firecracker-v1.11.0-$CPU_TYPE.tgz release-v1.11.0-$CPU_TYPE
+      curl -LO https://github.com/firecracker-microvm/firecracker/releases/download/v1.11.0/firecracker-v1.11.0-$CPU_TYPE.tgz
+      tar -xvf firecracker-v1.11.0-$CPU_TYPE.tgz && mv release-v1.11.0-$CPU_TYPE/firecracker-v1.11.0-$CPU_TYPE /usr/local/bin/firecracker
+      rm -rf firecracker-v1.11.0-$CPU_TYPE.tgz release-v1.11.0-$CPU_TYPE
+    cd ..
     
