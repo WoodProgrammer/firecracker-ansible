@@ -1,0 +1,5 @@
+target_directory: "alpine-rootfs"
+docker_file: "Dockerfile"
+context: "."
+image: "alpine"
+config_file_name: "alpine-config"

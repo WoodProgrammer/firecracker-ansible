@@ -1,0 +1,47 @@
+- name: Install dependencies for debian distribution
+  when: ansible_facts['distribution'] == 'Ubuntu'
+  apt:
+    name:
+    - git
+    - curl
+    - gcc
+    - make
+    - tar
+    state: present
+    update_cache: yes
+  when: os_release.rc == "debian"
+
+- name: Install dependencies for rhel distribution
+  yum:
+    name:
+    - git
+    - curl
+    - gcc
+    - make
+    - tar
+    state: present
+    update_cache: yes
+  when: os_release.rc == "rhel"
+
+- name: Check if KVM is available
+  command: modinfo kvm
+  register: kvm_check
+  ignore_errors: yes
+
+- name: Fail if KVM not available
+  fail:
+    msg: "KVM not supported on this host."
+  when: kvm_check.rc != 0
+
+- name: Download firecracker binary
+  ansible.builtin.shell: |
+
+    set -e
+    CPU_TYPE=$(lscpu |grep "Architecture"| awk -F ":" '{print $2}'|tr -d " ")
+
+    cd /tmp/
+      curl -LO https://github.com/firecracker-microvm/firecracker/releases/download/v1.11.0/firecracker-v1.11.0-$CPU_TYPE.tgz
+      tar -xvf firecracker-v1.11.0-$CPU_TYPE.tgz && mv release-v1.11.0-$CPU_TYPE/firecracker-v1.11.0-$CPU_TYPE /usr/local/bin/firecracker
+      rm -rf firecracker-v1.11.0-$CPU_TYPE.tgz release-v1.11.0-$CPU_TYPE
+    cd ..
+    

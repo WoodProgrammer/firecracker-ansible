@@ -1,0 +1,6 @@
+- name: Configure firecracker target
+  hosts: firecracker
+  become: true
+
+  roles:
+    - build_fs
