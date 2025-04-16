@@ -1,0 +1,27 @@
+- name: Check Dist Version
+  shell: cat /etc/os-release |grep ID_LIKE|awk -F "=" '{print $2}'
+  register: os_release
+
+- name: Install Docker daemon for debian distribution
+  apt:
+    name:
+    - docker.io
+    state: present
+    update_cache: yes
+  when: os_release.rc == "debian"
+
+- name: Download firecracker binary
+  ansible.builtin.shell: |
+    set -e
+    export CPU_TYPE=$(lscpu |grep "Architecture"| awk -F ":" '{print $2}'|tr -d " ")
+    export CPU_ARCH="amd64"
+
+
+    if [ ${CPU_TYPE} != "x86_64" ];
+    then
+      export CPU_ARCH="arm64"
+    fi
+    cd /tmp/
+      curl -LO https://github.com/WoodProgrammer/firecracker-rootfs-builder/releases/download/v0.0.2/firecracker-rootfs-builder_0.0.2_linux_${CPU_ARCH}.tar.gz
+      tar -xvf firecracker-rootfs-builder_0.0.2_linux_amd64.tar.gz && mv bin/ofs /usr/local/bin
+    cd ..

@@ -1,6 +1,6 @@
-- name: Configure nginx server
-  hosts: web
+- name: Configure firecracker target
+  hosts: firecracker
   become: true
 
   roles:
-    - nginx
+    - build_fs
